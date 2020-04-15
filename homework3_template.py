@@ -156,6 +156,13 @@ def performTransform(image):
         final = randomNoiseFunc(image)
     return final
 
+def makeTransformArray(images):
+    transformArray = [None] * len(images)
+    np_transform_array = np.array(transformArray)
+    for i in range(0, len(images)):
+        final = performTransform(images[i,:])
+        transformArray[i] = final;
+    return np_transform_array
 
 if __name__ == "__main__":
     # Xt = np.arange(100)
