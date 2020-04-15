@@ -97,7 +97,7 @@ if __name__ == "__main__":
     Yte = Yte.T
 
 
-    W = softmaxRegression(Xtr, Ytr, Xte, Yte, epsilon=0.1, batchSize=100)
+    W = softmaxRegression(Xtr, Ytr, Xte, Yte, epsilon=0.5, batchSize=100)
 
     print("Training percent correct accuracy: " + str(percent_accuracy(Xtr, W, Ytr)))
     print("Testing percent correct accuracy: " + str(percent_accuracy(Xte, W, Yte)))
