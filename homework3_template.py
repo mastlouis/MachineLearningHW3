@@ -12,15 +12,15 @@ def softmaxRegression (trainingImages, trainingLabels, testingImages, testingLab
 
 
 def any_softmax_regression(X, y, epsilon=3e-3, batchsize=128):
-    W = np.random.rand(10, 785)
+    W = np.random.rand(785,10)
     # randomize_order(X, y)
     for i in range(3000):  # Number of epochs
-        for j in range(0, y.shape[0], batchsize):
-            end = min(j + batchsize, y.shape[0] - 1)
-            Z = np.dot(W.T, X[j:end, :])
+        for j in range(0, y.shape[1], batchsize):
+            end = min(j + batchsize, y.shape[1] - 1)
+            Z = np.dot(W.T, X[:, j:end])
             Z = np.exp(Z)
-            Z = Z / np.sum(Z, axis=1)
-            gradW = X.T.dot(Z - y[j:end, :]) / (end - j)
+            Z = Z / np.sum(Z, axis=0)
+            gradW = X[:,j:end].T.dot(Z - y[:, j:end]) / (end - j)
             gradW[:, -1] = 0
             W = W - (epsilon * gradW)
     return W
@@ -40,10 +40,10 @@ def randomize_order(X, y, order_seed=None):
 
 def reshape_and_append_1s(images):
     # images = images.reshape(-1, 28, 28)
-    # images = images.T
     # images = np.reshape(images, (images.shape[0] ** 2, images.shape[2]))
     ones = np.ones((images.shape[0], 1))
     images = np.hstack((images, ones))
+    images = images.T
     return images
 
 
@@ -57,6 +57,8 @@ if __name__ == "__main__":
     # Append a constant 1 term to each example to correspond to the bias terms
     trainingImages = reshape_and_append_1s(trainingImages)
     testingImages = reshape_and_append_1s(testingImages)
+    trainingLabels = trainingLabels.T
+    testingLabels = testingLabels.T
 
 
     W = softmaxRegression(trainingImages, trainingLabels, testingImages, testingLabels, epsilon=0.1, batchSize=100)
