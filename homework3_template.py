@@ -15,14 +15,14 @@ def softmaxRegression (trainingImages, trainingLabels, testingImages, testingLab
     return any_softmax_regression(trainingImages, trainingLabels, epsilon, batchSize)
 
 
-def any_softmax_regression(X, y, epsilon=0.1, batchsize=100, epochs = 3000):
+def any_softmax_regression(X, y, epsilon=0.5, batchsize=100, epochs = 600):
     W = np.random.rand(785,10)
     for i in range(epochs):  # Number of epochs
         for j in range(0, y.shape[1], batchsize):
             end = min(j + batchsize, y.shape[1] - 1)
             Yhat = normalize(W, X[:, j:end])
             gradW = np.dot(X[:, j:end], (Yhat - y[:, j:end]).T) / (end - j)
-            gradW[:, -1] = 0
+            # gradW[:, -1] = 0  # This would be right for L2 regularization, but it doesn't belong here
             W = W - (epsilon * gradW)
             if i == epochs - 1 and (y.shape[1] - j)/batchsize <= 20:  # If this is in the last 20 iterations
                 print('Percent accuracy is ' + str(percent_accuracy(X, W, y)))
@@ -145,7 +145,7 @@ def performTransform(image):
         final = translationFunc(image, randNum,randNum)
     # rotation
     if (randNum == 2):
-        randDegree = random.randint(-45, 45)
+        randDegree = random.randint(-15, 15)
         final = rotationFunc(image, randDegree)
     # scaling
     if (randNum == 3):
@@ -158,10 +158,10 @@ def performTransform(image):
 
 def makeTransformArray(images):
     transformArray = [None] * len(images)
-    np_transform_array = np.array(transformArray)
     for i in range(0, len(images)):
         final = performTransform(images[i,:])
-        transformArray[i] = final;
+        transformArray[i] = final
+    np_transform_array = np.array(transformArray)
     return np_transform_array
 
 if __name__ == "__main__":
@@ -179,9 +179,8 @@ if __name__ == "__main__":
     Ytr = trainingLabels.copy()
     Xte = testingImages.copy()
     Yte = testingLabels.copy()
-
-    randomize_order(Xtr, Ytr, 5)
-    randomize_order(Xte, Yte, 5)
+    randomize_order(Xtr, Ytr, 10)
+    randomize_order(Xte, Yte, 10)
 
     # Append a constant 1 term to each example to correspond to the bias terms
     Xtr = reshape_and_append_1s(Xtr)
@@ -189,13 +188,27 @@ if __name__ == "__main__":
     Ytr = Ytr.T
     Yte = Yte.T
 
+    # W = softmaxRegression(Xtr, Ytr, Xte, Yte, epsilon=0.5, batchSize=100)
+    #
+    # print("Training percent correct accuracy: " + str(percent_accuracy(Xtr, W, Ytr)))
+    # print("Testing percent correct accuracy: " + str(percent_accuracy(Xte, W, Yte)))
+    # print("Training cross entropy: " + str(cross_entropy(Xtr, W, Ytr)))
+    # print("Testing cross entropy: " + str(cross_entropy(Xte, W, Yte)))
 
-    W = softmaxRegression(Xtr, Ytr, Xte, Yte, epsilon=0.5, batchSize=100)
+    # Operate on Augmented data
+    Xaug = makeTransformArray(np.reshape(trainingImages, (-1, 28, 28)))
+    Yaug = trainingLabels.copy()
+    Xaug = np.reshape(Xaug, (Yaug.shape[0], -1))
+    # randomize_order(Xaug, Yaug, 10)
+    Xaug = reshape_and_append_1s(Xaug)
+    Yaug = trainingLabels.T
 
-    print("Training percent correct accuracy: " + str(percent_accuracy(Xtr, W, Ytr)))
-    print("Testing percent correct accuracy: " + str(percent_accuracy(Xte, W, Yte)))
-    print("Training cross entropy: " + str(cross_entropy(Xtr, W, Ytr)))
-    print("Testing cross entropy: " + str(cross_entropy(Xte, W, Yte)))
+    Waug = any_softmax_regression(Xaug, Yaug, epsilon=0.5, batchsize=100)
+
+    print("Training percent correct accuracy: " + str(percent_accuracy(Xaug, Waug, Yaug)))
+    print("Testing percent correct accuracy: " + str(percent_accuracy(Xte, Waug, Yte)))
+    print("Training cross entropy: " + str(cross_entropy(Xaug, Waug, Yaug)))
+    print("Testing cross entropy: " + str(cross_entropy(Xte, Waug, Yte)))
     
     # Visualize the vectors
 
